@@ -10,6 +10,10 @@
 
 [【秒杀系统】零基础上手秒杀系统（三）：抢购接口隐藏 + 单用户限制频率](https://mp.weixin.qq.com/s?__biz=MzU1NTA0NTEwMg==&mid=2247484184&idx=1&sn=8b878e9e730a6e4da27ed336c8201c92&lang=zh_CN#rd)
 
+[【秒杀系统】四：令牌桶+AOP注解实现不同接口不同速率限流](https://mp.weixin.qq.com/s/yfZHnZZCKbpQjueJ9MUJYQ)
+
+
+
 ### 项目使用简介
 
 项目是SpringBoot工程，并且是父子工程，直接导入IDEA，Eclipse即可使用。
