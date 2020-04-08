@@ -40,7 +40,7 @@ public class DebugRabbitSenderService {
      * @param orderNo 秒杀成功之后的订单编号
      */
     public void sendKillSuccessEmailMsg(int orderNo) {
-        log.info("秒杀成功异步发送邮件通知消息-准备发送消息：{}", orderNo);
+        log.info("秒杀成功异步发送邮件、短信通知消息-准备发送消息：{}", orderNo);
 
         try {
             StockOrder info = orderMapper.selectByPrimaryKey(orderNo);
@@ -68,7 +68,7 @@ public class DebugRabbitSenderService {
             }
 
         } catch (Exception e) {
-            log.error("秒杀成功异步发送邮件通知消息-发生异常，消息为：{}", orderNo, e.fillInStackTrace());
+            log.error("秒杀成功异步发送邮件、短信通知消息-发生异常，消息为：{}", orderNo, e.fillInStackTrace());
         }
     }
 }

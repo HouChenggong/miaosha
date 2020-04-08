@@ -1,9 +1,12 @@
 package cn.monitor4all.miaoshaservice.debug.consumer;
 
+import cn.monitor4all.miaoshadao.dao.MailDto;
 import cn.monitor4all.miaoshadao.dao.StockOrder;
 import cn.monitor4all.miaoshaservice.debug.DebugRabbitConsts;
+import cn.monitor4all.miaoshaservice.debug.mail.DebugMailService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -13,6 +16,9 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class DebugRabbitConsumer {
+
+    @Autowired
+    private DebugMailService mailService;
 
     /**
      * 秒杀异步邮件通知-接收消息
@@ -26,7 +32,7 @@ public class DebugRabbitConsumer {
 
             //TODO:真正的发送邮件....
             log.info("这里应该是真正发送邮件的逻辑..........如果发送成功，可以更新下数据库的字段，表示发送成功，否则就执行相关邮件发送失败逻辑");
-
+            mailService.sendSimpleEmail(new MailDto("邮件", "这是邮件内容", new String[]{"xxx@qq.com", "xbbb@qq.com"}));
         } catch (Exception e) {
             log.error("秒杀异步邮件通知-接收消息-发生异常：", e.fillInStackTrace());
         }
