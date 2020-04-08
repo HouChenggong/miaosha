@@ -11,8 +11,8 @@
 [【秒杀系统】零基础上手秒杀系统（三）：抢购接口隐藏 + 单用户限制频率](https://mp.weixin.qq.com/s?__biz=MzU1NTA0NTEwMg==&mid=2247484184&idx=1&sn=8b878e9e730a6e4da27ed336c8201c92&lang=zh_CN#rd)
 
 [【秒杀系统】四：令牌桶+AOP注解实现不同接口不同速率限流](https://mp.weixin.qq.com/s/yfZHnZZCKbpQjueJ9MUJYQ)
-
-
+[用RabbitMq实现秒杀成功之后的通知](https://github.com/HouChenggong/miaosha/blob/master/md/1%E7%94%A8MQ%E5%8F%91%E9%80%81%E6%B6%88%E6%81%AF%E5%B9%B6%E9%AA%8C%E8%AF%81.md)
+[用RabbitMQ实现异步发送邮件或者短信](https://github.com/HouChenggong/miaosha/blob/master/md/rabbitMQSendMsg.md)
 
 ### 项目使用简介
 
