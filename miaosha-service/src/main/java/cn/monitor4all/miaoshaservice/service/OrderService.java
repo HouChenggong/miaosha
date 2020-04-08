@@ -29,4 +29,14 @@ public interface OrderService {
     public int createPessimisticOrder(int sid);
 
     public int createVerifiedOrder(Integer sid, Integer userId, String verifyHash) throws Exception;
+
+
+
+    /**
+     * 创建订单 乐观锁
+     * @param sid
+     * @return
+     * @throws Exception
+     */
+    public int createOptimisticOrderAndSendMsg(int sid);
 }

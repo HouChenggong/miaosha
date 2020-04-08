@@ -34,5 +34,8 @@ public class StockOrder implements Serializable {
 
     private Date createTime;
 
-
+    /**
+     * 订单状态，0秒杀成功，1已经付款，-1 超时未支付被取消  -2 用户自己取消订单
+     */
+    private Integer status;
 }

@@ -2,6 +2,7 @@ package cn.monitor4all.miaoshaservice.debug.consumer;
 
 import cn.monitor4all.miaoshadao.dao.MailDto;
 import cn.monitor4all.miaoshadao.dao.StockOrder;
+import cn.monitor4all.miaoshadao.mapper.StockOrderMapper;
 import cn.monitor4all.miaoshaservice.debug.DebugRabbitConsts;
 import cn.monitor4all.miaoshaservice.debug.mail.DebugMailService;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,10 @@ public class DebugRabbitConsumer {
     @Autowired
     private DebugMailService mailService;
 
+
+    @Autowired
+    private StockOrderMapper stockOrderMapper;
+
     /**
      * 秒杀异步邮件通知-接收消息
      * queues接受的队列
@@ -35,6 +40,29 @@ public class DebugRabbitConsumer {
             mailService.sendSimpleEmail(new MailDto("邮件", "这是邮件内容", new String[]{"xxx@qq.com", "xbbb@qq.com"}));
         } catch (Exception e) {
             log.error("秒杀异步邮件通知-接收消息-发生异常：", e.fillInStackTrace());
+        }
+    }
+
+    /**
+     * 用户秒杀成功后超时未支付-监听者
+     *
+     * @param info
+     */
+    @RabbitListener(queues = {DebugRabbitConsts.MAIL_SUCCESS_DEAD_REAL_QUEUE}, containerFactory = "singleListenerContainer")
+    public void consumeExpireOrder(StockOrder info) {
+        try {
+            log.info("用户秒杀成功后超时未支付-监听者-接收消息:{}", info);
+
+            if (info != null) {
+                StockOrder entity = stockOrderMapper.selectByPrimaryKey(info.getId());
+                // 到时间了判断订单是否存于未支付状态
+                if (entity != null && entity.getStatus() != null && entity.getStatus() == 0) {
+                    log.info("用户超时未支付，发送消息并把订单取消");
+                    stockOrderMapper.expireOrder(info.getId());
+                }
+            }
+        } catch (Exception e) {
+            log.error("用户秒杀成功后超时未支付-监听者-发生异常：", e.fillInStackTrace());
         }
     }
 }

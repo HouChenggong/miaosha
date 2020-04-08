@@ -20,4 +20,11 @@ public interface StockOrderMapper {
     int updateByPrimaryKeySelective(StockOrder record);
 
     int updateByPrimaryKey(StockOrder record);
+
+    /**
+     * 使超时未支付的订单失效
+     * @param id
+     * @return
+     */
+    int expireOrder(Integer id);
 }

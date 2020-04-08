@@ -6,6 +6,7 @@ import cn.monitor4all.miaoshadao.dao.User;
 import cn.monitor4all.miaoshadao.mapper.StockOrderMapper;
 import cn.monitor4all.miaoshadao.mapper.UserMapper;
 import cn.monitor4all.miaoshadao.utils.CacheKey;
+import cn.monitor4all.miaoshaservice.debug.send.DebugRabbitSenderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,9 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private UserMapper userMapper;
 
+    @Autowired
+    private DebugRabbitSenderService senderService;
+
     @Override
     public int createWrongOrder(int sid) {
         //校验库存
@@ -52,12 +56,12 @@ public class OrderServiceImpl implements OrderService {
         saleStockOptimistic(stock);
         //创建订单
         int id = createOrder(stock);
-        return stock.getCount() - (stock.getSale()+1);
+        return stock.getCount() - (stock.getSale() + 1);
     }
 
     @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRED)
     @Override
-    public int createPessimisticOrder(int sid){
+    public int createPessimisticOrder(int sid) {
         //校验库存(悲观锁for update)
         Stock stock = checkStockForUpdate(sid);
         //更新库存
@@ -104,11 +108,28 @@ public class OrderServiceImpl implements OrderService {
         createOrderWithUserInfo(stock, userId);
         LOGGER.info("创建订单成功");
 
-        return stock.getCount() - (stock.getSale()+1);
+        return stock.getCount() - (stock.getSale() + 1);
+    }
+
+    @Override
+    public int createOptimisticOrderAndSendMsg(int sid) {
+        //校验库存
+        Stock stock = checkStock(sid);
+        //乐观锁更新库存
+        saleStockOptimistic(stock);
+        //创建订单
+        int id = createOrder(stock);
+        //发送消息
+        senderService.sendKillSuccessEmailMsg(id);
+        //入死信队列，如果超时，会自动发送消息
+        senderService.sendKillSuccessOrderExpireMsg(id);
+        int success = stock.getCount() - (stock.getSale() + 1);
+        return success;
     }
 
     /**
      * 检查库存
+     *
      * @param sid
      * @return
      */
@@ -122,6 +143,7 @@ public class OrderServiceImpl implements OrderService {
 
     /**
      * 检查库存 ForUpdate
+     *
      * @param sid
      * @return
      */
@@ -135,6 +157,7 @@ public class OrderServiceImpl implements OrderService {
 
     /**
      * 更新库存
+     *
      * @param stock
      */
     private void saleStock(Stock stock) {
@@ -144,18 +167,20 @@ public class OrderServiceImpl implements OrderService {
 
     /**
      * 更新库存 乐观锁
+     *
      * @param stock
      */
     private void saleStockOptimistic(Stock stock) {
         LOGGER.info("查询数据库，尝试更新库存");
         int count = stockService.updateStockByOptimistic(stock);
-        if (count == 0){
-            throw new RuntimeException("乐观锁并发更新库存失败") ;
+        if (count == 0) {
+            throw new RuntimeException("乐观锁并发更新库存失败");
         }
     }
 
     /**
      * 创建订单
+     *
      * @param stock
      * @return
      */
@@ -163,12 +188,14 @@ public class OrderServiceImpl implements OrderService {
         StockOrder order = new StockOrder();
         order.setSid(stock.getId());
         order.setName(stock.getName());
-        int id = orderMapper.insertSelective(order);
-        return id;
+        order.setStatus(0);
+         orderMapper.insertSelective(order);
+        return order.getId();
     }
 
     /**
      * 创建订单：保存用户信息
+     *
      * @param stock
      * @return
      */
@@ -177,6 +204,8 @@ public class OrderServiceImpl implements OrderService {
         order.setSid(stock.getId());
         order.setName(stock.getName());
         order.setUserId(userId);
+        //未支付的状态
+        order.setStatus(0);
         return orderMapper.insertSelective(order);
     }
 }

@@ -1,6 +1,7 @@
 package cn.monitor4all.miaoshaservice.debug;
 
 
+import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
@@ -12,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.amqp.SimpleRabbitListenerContainerFactoryConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.Map;
 
 /**
  * 通用化 Rabbitmq 配置
@@ -136,4 +139,43 @@ public class DebugRabbitmqConfig {
     // ----------------------------------------------------秒杀成功的MQ-
 
 
+    //构建秒杀成功之后-订单超时未支付的死信队列消息模型
+
+    @Bean
+    public Queue successKillDeadQueue() {
+        Map<String, Object> argsMap = Maps.newHashMap();
+        argsMap.put("x-dead-letter-exchange", DebugRabbitConsts.MAIL_SUCCESS_DEAD_EXCHANGE);
+        argsMap.put("x-dead-letter-routing-key", DebugRabbitConsts.MAIL_SUCCESS_DEAD_ROUTING);
+        return new Queue(DebugRabbitConsts.MAIL_SUCCESS_DEAD_QUEUE, true, false, false, argsMap);
+    }
+
+    //基本交换机
+    @Bean
+    public TopicExchange successKillDeadProdExchange() {
+        return new TopicExchange(DebugRabbitConsts.MAIL_SUCCESS_DEAD_TTL_EXCHANGE, true, false);
+    }
+
+    //创建基本交换机+基本路由 -> 死信队列 的绑定
+    @Bean
+    public Binding successKillDeadProdBinding() {
+        return BindingBuilder.bind(successKillDeadQueue()).to(successKillDeadProdExchange()).with(DebugRabbitConsts.MAIL_SUCCESS_DEAD_TTL_ROUTING);
+    }
+
+    //真正的队列
+    @Bean
+    public Queue successKillRealQueue() {
+        return new Queue(DebugRabbitConsts.MAIL_SUCCESS_DEAD_REAL_QUEUE,true);
+    }
+
+    //死信交换机
+    @Bean
+    public TopicExchange successKillDeadExchange() {
+        return new TopicExchange(DebugRabbitConsts.MAIL_SUCCESS_DEAD_EXCHANGE, true, false);
+    }
+
+    //死信交换机+死信路由->真正队列 的绑定
+    @Bean
+    public Binding successKillDeadBinding() {
+        return BindingBuilder.bind(successKillRealQueue()).to(successKillDeadExchange()).with(DebugRabbitConsts.MAIL_SUCCESS_DEAD_ROUTING);
+    }
 }

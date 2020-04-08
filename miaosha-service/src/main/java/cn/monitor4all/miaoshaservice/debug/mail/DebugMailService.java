@@ -29,9 +29,9 @@ public class DebugMailService {
         try {
             System.out.println("假装发送了邮件、短信" + dto.toString());
             //这里执行具体的邮件或者短信发送方法，这里不再写邮件发送的接口
-            log.info("发送成功!" + dto.toString());
+            log.info("发送邮件、短信成功!" + dto.toString());
         } catch (Exception e) {
-            log.error("发生异常： ", e.fillInStackTrace());
+            log.error("发生邮件、短信异常： ", e.fillInStackTrace());
         }
     }
 
