@@ -1,14 +1,33 @@
 package cn.monitor4all.miaoshadao.dao;
 
+/**
+ * @author xiyou
+ * 商品库存表
+ */
 public class Stock {
+    /**
+     * 这里为了方便直接用自增id演示
+     */
     private Integer id;
 
+    /**
+     * 商品名称
+     */
     private String name;
 
+    /**
+     * 总共有多少
+     */
     private Integer count;
 
+    /**
+     * 已经卖了多少
+     */
     private Integer sale;
 
+    /**
+     * MVCC校验版本
+     */
     private Integer version;
 
     public Integer getId() {

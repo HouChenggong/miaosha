@@ -1,5 +1,8 @@
 package cn.monitor4all.miaoshadao.dao;
 
+/**
+ * @author xiyou
+ */
 public class User {
     private Long id;
 
