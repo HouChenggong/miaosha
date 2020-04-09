@@ -20,6 +20,12 @@
         from stock_order
         where id = #{id,jdbcType=INTEGER}
     </select>
+    <select id="selectBySidAndUserId" resultType="java.lang.Integer">
+
+            SELECT COUNT(1) AS total
+    FROM stock_order
+    WHERE sid = #{sid} AND user_id = #{userId} AND status IN (0)
+    </select>
     <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
     delete from stock_order
     where id = #{id,jdbcType=INTEGER}
@@ -29,7 +35,8 @@
     values (#{id,jdbcType=INTEGER}, #{sid,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, 
       #{createTime,jdbcType=TIMESTAMP}, #{status,jdbcType=INTEGER})
   </insert>
-    <insert id="insertSelective" parameterType="cn.monitor4all.miaoshadao.dao.StockOrder" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insertSelective" parameterType="cn.monitor4all.miaoshadao.dao.StockOrder" useGeneratedKeys="true"
+            keyProperty="id">
         insert into stock_order
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="id != null">

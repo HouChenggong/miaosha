@@ -1,10 +1,12 @@
 package cn.monitor4all.miaoshaweb.controller;
 
+import cn.monitor4all.miaoshadao.dao.StockOrder;
 import cn.monitor4all.miaoshaservice.debug.send.DebugRabbitSenderService;
 import cn.monitor4all.miaoshaservice.service.OrderService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +35,15 @@ public class DebugRabbitController {
         senderService.sendKillSuccessEmailMsg(sid);
         return "正在测试订单编号" + sid + "发送MQ消息的服务";
     }
+
+
+    @PostMapping("/testRedisKillAndSendMq")
+    @ApiOperation(value = "测试发送消息能不能被消费者接受到", notes = "测试")
+    public String createOptimisticOrderAop2( ) {
+        orderService.redisKill(1, RandomUtils.nextInt(190,200));
+        return "正在测试订单编号" +   "发送MQ消息的服务";
+    }
+
 
     /**
      * 乐观锁更新库存 + 令牌桶限流

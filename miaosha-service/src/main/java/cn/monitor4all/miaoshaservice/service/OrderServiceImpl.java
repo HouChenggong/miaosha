@@ -7,17 +7,22 @@ import cn.monitor4all.miaoshadao.mapper.StockOrderMapper;
 import cn.monitor4all.miaoshadao.mapper.UserMapper;
 import cn.monitor4all.miaoshadao.utils.CacheKey;
 import cn.monitor4all.miaoshaservice.debug.send.DebugRabbitSenderService;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 @Service
+@Slf4j
 public class OrderServiceImpl implements OrderService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderServiceImpl.class);
@@ -36,6 +41,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private DebugRabbitSenderService senderService;
+
 
     @Override
     public int createWrongOrder(int sid) {
@@ -127,6 +133,53 @@ public class OrderServiceImpl implements OrderService {
         return success;
     }
 
+    @Override
+    public int redisKill(int sid, Integer userId) {
+        //校验库存
+        Stock stock = checkStock(sid);
+        int total = orderMapper.selectBySidAndUserId(sid, userId);
+        if (total > 0) {
+            log.error("当前用户已经秒杀过了" + userId);
+            return 0;
+        } else {
+            System.out.println("过来了一个线程" + userId + "____"+System.currentTimeMillis());
+        }
+        //TODO:借助Redis的原子操作实现分布式锁-对共享操作-资源进行控制
+        ValueOperations valueOperations = stringRedisTemplate.opsForValue();
+        final String key = new StringBuffer().append(sid).append(userId).append("-RedisLock").toString();
+        final String value = RandomUtils.nextInt() + "";
+        //lua脚本提供“分布式锁服务”，就可以写在一起
+        Boolean cacheRes = valueOperations.setIfAbsent(key, value);
+        if (cacheRes) {
+            stringRedisTemplate.expire(key, 30, TimeUnit.SECONDS);
+            try {
+                //扣库存,不用乐观锁，也不用悲观锁
+                saleStock(stock);
+                //创建订单
+                int id = createOrderWithUserInfo(stock, userId);
+                log.error("当前用户秒杀成功" + userId);
+                //发送消息
+                senderService.sendKillSuccessEmailMsg(id);
+                //入死信队列，如果超时，会自动发送消息
+                senderService.sendKillSuccessOrderExpireMsg(id);
+                int success = stock.getCount() - (stock.getSale() + 1);
+                return success;
+            } catch (Exception e) {
+                throw new RuntimeException("抢购失败");
+            } finally {
+                if (value.equals(valueOperations.get(key).toString())) {
+                    stringRedisTemplate.delete(key);
+                }
+            }
+        }
+        return 0;
+    }
+
+    @Override
+    public int checkOrderBySidAndUserId(int sid, Integer userId) {
+        return 0;
+    }
+
     /**
      * 检查库存
      *
@@ -189,7 +242,7 @@ public class OrderServiceImpl implements OrderService {
         order.setSid(stock.getId());
         order.setName(stock.getName());
         order.setStatus(0);
-         orderMapper.insertSelective(order);
+        orderMapper.insertSelective(order);
         return order.getId();
     }
 
