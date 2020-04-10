@@ -38,21 +38,21 @@ public class DebugRabbitController {
 
 
     @PostMapping("/testRedisKillAndSendMq")
-    @ApiOperation(value = "测试发送消息能不能被消费者接受到", notes = "测试")
-    public String createOptimisticOrderAop2( ) {
-        orderService.redisKill(1, RandomUtils.nextInt(190,200));
-        return "正在测试订单编号" +   "发送MQ消息的服务";
+    @ApiOperation(value = "测试redis分布式锁结合死信队列", notes = "测试")
+    public String createOptimisticOrderAop2() {
+        orderService.redisKill(1, RandomUtils.nextInt(1000, 10000));
+        return "正在测试订单编号" + "发送MQ消息的服务";
     }
 
 
     /**
-     * 乐观锁更新库存 + 令牌桶限流
+     * 测试用户秒杀结束后，进入死信队列
      *
      * @param sid
      * @return
      */
     @GetMapping("/testDead/{sid}")
-    @ApiOperation(value = "乐观锁更新库存 + 令牌桶限流", notes = "项目信息")
+    @ApiOperation(value = "测试用户秒杀结束后，进入死信队列", notes = "死信队列")
     @ResponseBody
     public String createOptimisticOrder(@PathVariable int sid) {
 

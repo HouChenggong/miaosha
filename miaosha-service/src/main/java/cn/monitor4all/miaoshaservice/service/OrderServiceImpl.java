@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -142,7 +143,7 @@ public class OrderServiceImpl implements OrderService {
             log.error("当前用户已经秒杀过了" + userId);
             return 0;
         } else {
-            System.out.println("过来了一个线程" + userId + "____"+System.currentTimeMillis());
+            System.out.println("过来了一个线程" + userId + "____" + System.currentTimeMillis());
         }
         //TODO:借助Redis的原子操作实现分布式锁-对共享操作-资源进行控制
         ValueOperations valueOperations = stringRedisTemplate.opsForValue();
@@ -151,10 +152,10 @@ public class OrderServiceImpl implements OrderService {
         //lua脚本提供“分布式锁服务”，就可以写在一起
         Boolean cacheRes = valueOperations.setIfAbsent(key, value);
         if (cacheRes) {
-            stringRedisTemplate.expire(key, 30, TimeUnit.SECONDS);
+            stringRedisTemplate.expire(key, 10, TimeUnit.SECONDS);
             try {
-                //扣库存,不用乐观锁，也不用悲观锁
-                saleStock(stock);
+                //乐观锁扣减库存
+                saleStockOptimistic(stock);
                 //创建订单
                 int id = createOrderWithUserInfo(stock, userId);
                 log.error("当前用户秒杀成功" + userId);
@@ -259,6 +260,8 @@ public class OrderServiceImpl implements OrderService {
         order.setUserId(userId);
         //未支付的状态
         order.setStatus(0);
-        return orderMapper.insertSelective(order);
+        order.setCreateTime(new Date());
+        orderMapper.insertSelective(order);
+        return order.getId();
     }
 }
