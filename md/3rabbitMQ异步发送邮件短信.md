@@ -72,9 +72,5 @@ public class DebugRabbitConsumer {
 }
 ```
 
-## 3. 测试结果：
-
-```java
-
-```
+ 
 
