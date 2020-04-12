@@ -57,6 +57,10 @@ public class DebugRabbitConsts {
 
     /**
      * 用户可以多长时间不支付
+     * 1800000是30分钟
+     * 60000是一分钟
+     *1000 是一千毫秒是1秒种
+     * 所以我们暂时设置3分钟也就是180000
      */
-    public static final String  TTL_TIME = "30000";
+    public static final String  TTL_TIME = "180000";
 }

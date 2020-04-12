@@ -8,7 +8,6 @@ import java.util.Date;
 /**
  * @author xiyou
  * 订单表
- * 因为要用rabbitMQ传输，所以要进行序列化
  */
 @Data
 public class StockOrder implements Serializable {
