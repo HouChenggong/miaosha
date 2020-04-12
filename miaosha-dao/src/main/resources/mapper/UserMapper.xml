@@ -43,6 +43,18 @@
       </if>
     </trim>
   </insert>
+
+    <!-- 常规方式批量插入 -->
+    <insert id="batchInsertUserList"   parameterType="java.util.List"  >
+      insert into user (id, user_name) values
+      <!--open属性表示在拼接的SQL语句前加"xx",separator属性表示在拼接的SQL语句之间加"xx"，close属性表示在拼接的SQL语句后加"xx"-->
+      <foreach collection="list" item="user" index="index" separator=","  >
+        (#{user.id}, #{user.userName})
+      </foreach>
+    </insert>
+
+
+
   <update id="updateByPrimaryKeySelective" parameterType="cn.monitor4all.miaoshadao.dao.User" >
     update user
     <set >

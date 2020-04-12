@@ -4,15 +4,21 @@ server:
     context-path: /xiyou
 mybatis:
   mapper-locations: classpath:/mapper/*xml
-
 spring:
   redis:
     host: localhost
     port: 6379
     database: 0
+    password:
   datasource:
     ## mysql8.0用这个
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password: root
-    url: jdbc:mysql://localhost:3308/hcg?characterEncoding=utf8&serverTimezone=Asia/Shanghai&autoReconnect=true&useSSL=false
+    url: jdbc:mysql://localhost:3306/hcg?characterEncoding=utf8&serverTimezone=Asia/Shanghai&autoReconnect=true&useSSL=false
+
+#如果需要开启debug模式，把下面的打开
+#logging:
+#  config: classpath:logback-dev.xml
+#  level:
+#    root: debug
