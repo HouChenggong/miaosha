@@ -96,10 +96,12 @@ public class DistributedOrderServiceImpl implements IDistributedOrderService {
             try {
                 return killMainMethod(userId, stock);
             } finally {
+                sendMessage(stock.getId());
                 if (value.equals(valueOperations.get(key).toString())) {
                     stringRedisTemplate.delete(key);
                 }
             }
+
         } else {
             return ServerResponse.createByErrorMessage("未获取到分布式锁，导致秒杀失败" + userId);
         }
@@ -139,10 +141,6 @@ public class DistributedOrderServiceImpl implements IDistributedOrderService {
         //创建订单
         int orderId = createOrderWithUserInfo(stock, userId);
         log.info("当前用户秒杀成功" + userId);
-        //发送消息
-        senderService.sendKillSuccessEmailMsg(orderId);
-        //入死信队列，如果超时，会自动发送消息
-        senderService.sendKillSuccessOrderExpireMsg(orderId);
         return ServerResponse.createBySuccess("用户秒杀成功，订单为：" + orderId);
     }
 
@@ -180,6 +178,7 @@ public class DistributedOrderServiceImpl implements IDistributedOrderService {
             }
         } finally {
             lock.unlock();
+            sendMessage(stock.getId());
         }
     }
 
@@ -235,5 +234,18 @@ public class DistributedOrderServiceImpl implements IDistributedOrderService {
             throw new KillException("创建订单失败导致秒杀失败,用户id是：" + userId);
         }
         return order.getId();
+    }
+
+    /**
+     * 发送消息执行的逻辑
+     * 因为这个代码里面如果有异常，会自动捕获，所以这两个代码不会产生异常
+     *
+     * @param orderId
+     */
+    public void sendMessage(Integer orderId) {
+        //发送消息
+        senderService.sendKillSuccessEmailMsg(orderId);
+        //入死信队列，如果超时，会自动发送消息
+        senderService.sendKillSuccessOrderExpireMsg(orderId);
     }
 }
